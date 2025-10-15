@@ -257,7 +257,6 @@ impl<T> Sender<T> {
     ///
     /// The modification function is called with a mutable reference
     /// to the current value, and all receivers are notified of the change.
-    #[must_use]
     pub fn send_modify<F>(&self, modify: F)
     where
         F: FnOnce(&mut T),
@@ -274,7 +273,7 @@ impl<T> Sender<T> {
     /// of the change.
     #[must_use]
     pub fn send_replace(&self, mut value: T) -> T {
-        let _ = self.send_modify(|old| mem::swap(old, &mut value));
+        self.send_modify(|old| mem::swap(old, &mut value));
         value
     }
 
@@ -282,7 +281,6 @@ impl<T> Sender<T> {
     ///
     /// # Errors
     /// Returns `SendError::Failed` if the channel is closed (all receivers dropped).
-    #[must_use]
     pub fn send(&self, value: T) -> Result<(), SendError<T>> {
         if self.is_closed() {
             return Err(SendError::Failed(value));
@@ -478,7 +476,6 @@ impl<T> Receiver<T> {
     ///
     /// # Errors
     /// Returns `RecvError::Failed` if the channel is closed.
-    #[must_use]
     pub fn has_changed(&self) -> Result<bool, RecvError> {
         let state = self.shared.state.load();
         if state.is_closed() {
@@ -558,24 +555,30 @@ impl<T> Receiver<T> {
     ///
     /// # Errors
     /// Returns `RecvError::Failed` if the channel is closed before the condition is met.
-    #[must_use]
     pub async fn wait_for<F>(&mut self, mut cond: F) -> Result<Guard<'_, T>, RecvError>
     where
         F: FnMut(&T) -> bool,
     {
         loop {
             // Read current value and check if condition is met
-            let guard = self.shared.value.read();
-            let new_version = self.shared.state.load().version();
-            let has_changed = self.version != new_version;
-            self.version = new_version;
-            if cond(&guard) {
-                return Ok(Guard {
-                    inner: guard,
-                    has_changed,
-                });
+            {
+                let guard = self.shared.value.read();
+                let new_version = self.shared.state.load().version();
+                let has_changed = self.version != new_version;
+                self.version = new_version;
+                if cond(&guard) {
+                    // We must drop the guard before awaiting to avoid holding the lock across await point
+                    drop(guard);
+                    // Re-acquire the guard to return it
+                    let guard = self.shared.value.read();
+                    return Ok(Guard {
+                        inner: guard,
+                        has_changed,
+                    });
+                }
+                // Explicitly drop the guard to ensure it's not held during await
+                drop(guard);
             }
-            drop(guard);
 
             // Check if channel closed before waiting
             let state = self.shared.state.load();

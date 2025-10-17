@@ -34,10 +34,10 @@ impl State {
         State(Cell::new(Version::INITIAL.inner()))
     }
 
-    /// Loads the current state snapshot with acquire ordering.
+    /// Loads the current state snapshot.
     ///
-    /// Acquire ordering ensures subsequent reads see the state changes
-    /// that happened before this load.
+    /// This method is unsynchronized and intended for single-threaded use.
+    /// No memory ordering or synchronization is provided.
     #[inline]
     fn load(&self) -> StateSnapshot {
         StateSnapshot::from_usize(self.0.get())

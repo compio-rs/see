@@ -1,17 +1,17 @@
 [package]
-name = "compio-watch"
+name = "see"
 version = "0.1.0"
 edition = "2024"
 description = "A high-performance, asynchronous runtime-agnostic alternative to tokio::sync::watch"
 readme = "README.md"
-repository = "https://github.com/OpenTritium/compio-watch"
+repository = "https://github.com/compio-rs/see"
 license = "MIT OR Apache-2.0"
 keywords = ["async", "channel", "runtime-agnostic", "synchronization", "watch"]
 categories = ["asynchronous", "concurrency"]
 
 [[bench]]
 harness = false
-name = "tokio"
+name = "comparison"
 
 [dependencies]
 criterion = { version = "0.7.0", features = ["async_tokio", "html_reports"] }
@@ -20,6 +20,6 @@ parking_lot = "0.12.5"
 thiserror = "2.0.17"
 
 [dev-dependencies]
-compio = { version = "0.16.0", features = ["macros", "time"] }
 smol = "2.0.2"
+compio = { version = "0.16.0", features = ["macros", "time"] }
 tokio = { version = "1.48.0", features = ["full"] }

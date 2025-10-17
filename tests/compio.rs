@@ -1,11 +1,12 @@
-//! Tests for compio-watch integration with the compio runtime.
+//! Tests for see integration with the compio runtime.
 //!
 //! These tests verify that the watch channel works correctly with the compio
 //! async runtime, including basic send/receive operations, error handling,
 //! and channel lifecycle management.
 
-use compio_watch::{channel, error::RecvError};
 use std::time::Duration;
+
+use see::{channel, error::RecvError};
 
 /// Tests basic send and receive functionality with compio runtime.
 ///

@@ -1,10 +1,11 @@
-//! Tests for compio-watch integration with the smol runtime.
+//! Tests for see integration with the smol runtime.
 //!
 //! These tests verify that the watch channel works correctly with the smol
 //! async runtime, including basic send/receive operations, error handling,
 //! and channel lifecycle management.
-use compio_watch::{channel, error::RecvError};
 use std::time::Duration;
+
+use see::{channel, error::RecvError};
 
 #[test]
 fn basic_send_recv() {

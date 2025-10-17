@@ -1,20 +1,23 @@
-//! A high-performance, asynchronous runtime-agnostic alternative to `tokio::sync::watch`.
+//! A high-performance, asynchronous runtime-agnostic alternative to
+//! `tokio::sync::watch`.
 //!
-//! This library provides a watch channel implementation that uses `parking_lot::RwLock`
-//! and `event-listener` as its underlying implementation, offering a `tokio`-compatible API
-//! while being completely runtime-agnostic.
+//! This library provides a watch channel implementation that uses
+//! `parking_lot::RwLock` and `event-listener` as its underlying implementation,
+//! offering a `tokio`-compatible API while being completely runtime-agnostic.
 //!
 //! # Features
 //!
-//! - **Runtime-agnostic**: Works with any async runtime (tokio, smol, compio, etc.)
-//! - **High performance**: Outperforms tokio's native implementation in most scenarios
+//! - **Runtime-agnostic**: Works with any async runtime (tokio, smol, compio,
+//!   etc.)
+//! - **High performance**: Outperforms tokio's native implementation in most
+//!   scenarios
 //! - **Thread-safe**: All operations are safe for concurrent access
 //! - **Memory efficient**: Uses atomic operations and efficient locking
 //!
 //! # Usage
 //!
 //! ```
-//! use compio_watch::channel;
+//! use see::channel;
 //!
 //! # #[tokio::main]
 //! # async fn main() {
@@ -30,9 +33,6 @@
 //! # }
 //! ```
 
-use error::{RecvError, SendError};
-use event_listener::Event;
-use parking_lot::{RwLock, RwLockReadGuard};
 use std::{
     borrow, mem,
     ops::Deref,
@@ -41,6 +41,10 @@ use std::{
         atomic::{AtomicUsize, Ordering::*},
     },
 };
+
+use error::{RecvError, SendError};
+use event_listener::Event;
+use parking_lot::{RwLock, RwLockReadGuard};
 
 /// Error types for watch channel operations.
 pub mod error {
@@ -70,13 +74,13 @@ pub mod error {
 struct Version(usize);
 
 impl Version {
+    /// Initial version when channel is created
+    const INITIAL: Self = Version(0);
     /// Step size for version increments to avoid conflicts with closed bit
     ///
     /// Uses step size 2 so version numbers are always even, leaving LSB
     /// available for closed flag without affecting version comparison.
     const STEP: usize = 2;
-    /// Initial version when channel is created
-    const INITIAL: Self = Version(0);
 
     /// Decrements the version number, used to force detection of changes.
     ///
@@ -280,7 +284,8 @@ impl<T> Sender<T> {
     /// Sends a new value to all receivers.
     ///
     /// # Errors
-    /// Returns `SendError::Failed` if the channel is closed (all receivers dropped).
+    /// Returns `SendError::Failed` if the channel is closed (all receivers
+    /// dropped).
     pub fn send(&self, value: T) -> Result<(), SendError<T>> {
         if self.is_closed() {
             return Err(SendError::Failed(value));
@@ -414,6 +419,7 @@ impl<T> Guard<'_, T> {
 
 impl<T> Deref for Guard<'_, T> {
     type Target = T;
+
     #[inline]
     fn deref(&self) -> &Self::Target {
         self.inner.deref()
@@ -437,7 +443,8 @@ impl<T> borrow::Borrow<T> for Guard<'_, T> {
 /// The receiving half of the watch channel.
 ///
 /// Used to receive value updates from the sender. Multiple receivers
-/// can be created by cloning an existing receiver or using `Sender::subscribe()`.
+/// can be created by cloning an existing receiver or using
+/// `Sender::subscribe()`.
 #[derive(Debug)]
 pub struct Receiver<T> {
     shared: Arc<Shared<T>>,
@@ -445,7 +452,8 @@ pub struct Receiver<T> {
 }
 
 impl<T> Receiver<T> {
-    /// Returns a read-only guard to the current value without updating the version.
+    /// Returns a read-only guard to the current value without updating the
+    /// version.
     ///
     /// This allows inspecting the current value without marking it as "seen".
     /// Subsequent calls to `has_changed()` will still report changes.
@@ -494,7 +502,8 @@ impl<T> Receiver<T> {
         self.version.decrement();
     }
 
-    /// Marks the current value as seen, preventing change detection until the next update.
+    /// Marks the current value as seen, preventing change detection until the
+    /// next update.
     pub fn mark_unchanged(&mut self) {
         let current_version = self.shared.state.load().version();
         self.version = current_version;
@@ -554,7 +563,8 @@ impl<T> Receiver<T> {
     /// Updates version on each iteration to track seen changes.
     ///
     /// # Errors
-    /// Returns `RecvError::Failed` if the channel is closed before the condition is met.
+    /// Returns `RecvError::Failed` if the channel is closed before the
+    /// condition is met.
     pub async fn wait_for<F>(&mut self, mut cond: F) -> Result<Guard<'_, T>, RecvError>
     where
         F: FnMut(&T) -> bool,
@@ -567,7 +577,8 @@ impl<T> Receiver<T> {
                 let has_changed = self.version != new_version;
                 self.version = new_version;
                 if cond(&guard) {
-                    // We must drop the guard before awaiting to avoid holding the lock across await point
+                    // We must drop the guard before awaiting to avoid holding the lock across await
+                    // point
                     drop(guard);
                     // Re-acquire the guard to return it
                     let guard = self.shared.value.read();
@@ -606,8 +617,9 @@ impl<T> Drop for Receiver<T> {
         // No synchronization necessary as this is only used as a counter and
         // not memory access. Relaxed ordering is sufficient.
         if 1 == self.shared.rx_count.fetch_sub(1, Relaxed) {
-            // This is the last `Receiver` handle, notify all tasks waiting on `Sender::closed()`
-            // usize::MAX means notify all listeners, not just one
+            // This is the last `Receiver` handle, notify all tasks waiting on
+            // `Sender::closed()` usize::MAX means notify all listeners, not
+            // just one
             self.shared.closed.notify(usize::MAX);
         }
     }
@@ -620,7 +632,7 @@ impl<T> Drop for Receiver<T> {
 /// # Examples
 ///
 /// ```
-/// use compio_watch::channel;
+/// use see::channel;
 ///
 /// # #[tokio::main]
 /// # async fn main() {

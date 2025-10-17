@@ -10,7 +10,7 @@ This library is completely runtime-agnostic and does not rely on any specific sc
 
 In most scenarios, its measured performance is superior to `tokio`'s native implementation.
 
-| Number of Subscribers | `compio-watch` | `tokio::sync::watch` |     Advantage     |
+| Number of Subscribers | `see` | `tokio::sync::watch` |     Advantage     |
 | :-------------------- | :------------: | :------------------: | :---------------: |
 | 1                     |  **84.9 µs**   |       213.8 µs       |  **2.3x faster**  |
 | 4                     |  **350.6 µs**  |       388.6 µs       |  **11% faster**   |

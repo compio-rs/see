@@ -71,7 +71,7 @@ struct Shared<T> {
     changed: Event,
     /// Event notified when the channel closes (all receivers dropped)
     closed: Event,
-    /// The actual value protected by a read-write lock
+    /// The actual value stored with interior mutability via RefCell
     value: RefCell<T>,
 }
 

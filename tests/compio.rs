@@ -6,7 +6,7 @@
 
 use std::time::Duration;
 
-use see::{channel, error::RecvError};
+use see::{error::RecvError, sync::channel};
 
 /// Tests basic send and receive functionality with compio runtime.
 ///
@@ -41,7 +41,7 @@ async fn sender_dropped() {
     let (tx, rx) = channel("live");
     drop(tx);
     let result = rx.changed().await;
-    assert!(matches!(result, Err(RecvError::Failed)));
+    assert!(matches!(result, Err(RecvError::ChannelClosed)));
 }
 
 /// Tests behavior when all receivers are dropped.

@@ -35,7 +35,8 @@ async fn basic_send_recv() {
 ///
 /// This test verifies that:
 /// - When all senders are dropped, receivers get appropriate errors
-/// - The `changed()` method returns `RecvError::Failed` when channel is closed
+/// - The `changed()` method returns `RecvError::ChannelClosed` when channel is
+///   closed
 #[compio::test]
 async fn sender_dropped() {
     let (tx, rx) = channel("live");

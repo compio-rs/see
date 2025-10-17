@@ -177,7 +177,7 @@ impl<T> Sender<T> {
     /// Sends a new value to all receivers.
     ///
     /// # Errors
-    /// Returns `SendError::Failed` if the channel is closed (all receivers
+    /// Returns `SendError::ChannelClosed` if the channel is closed (all receivers
     /// dropped).
     pub fn send(&self, value: T) -> Result<(), SendError<T>> {
         if self.is_closed() {
@@ -376,7 +376,7 @@ impl<T> Receiver<T> {
     /// Checks if the value has changed since the last access.
     ///
     /// # Errors
-    /// Returns `RecvError::Failed` if the channel is closed.
+    /// Returns `RecvError::ChannelClosed` if the channel is closed.
     pub fn has_changed(&self) -> Result<bool, RecvError> {
         let state = self.shared.state.load();
         if state.is_closed() {
@@ -426,7 +426,7 @@ impl<T> Receiver<T> {
     /// Waits for the value to change.
     ///
     /// # Errors
-    /// Returns `RecvError::Failed` if the channel is closed.
+    /// Returns `RecvError::ChannelClosed` if the channel is closed.
     pub async fn changed(&self) -> Result<(), RecvError> {
         loop {
             // Check for change or closure before waiting
@@ -448,7 +448,7 @@ impl<T> Receiver<T> {
     /// Updates version on each iteration to track seen changes.
     ///
     /// # Errors
-    /// Returns `RecvError::Failed` if the channel is closed before the
+    /// Returns `RecvError::ChannelClosed` if the channel is closed before the
     /// condition is met.
     pub async fn wait_for<F>(&mut self, mut cond: F) -> Result<Guard<'_, T>, RecvError>
     where

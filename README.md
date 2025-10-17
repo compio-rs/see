@@ -1,4 +1,4 @@
-# `compio-watch`
+# `See`
 
 A high-performance, asynchronous runtime-agnostic alternative to `tokio::sync::watch`. It uses `parking_lot::RwLock` and `event-listener` as its underlying implementation and provides a `tokio`-compatible API.
 

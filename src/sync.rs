@@ -446,19 +446,14 @@ impl<T> Receiver<T> {
     /// # Errors
     /// Returns `RecvError::Failed` if the channel is closed.
     pub async fn changed(&self) -> Result<(), RecvError> {
-        // First check: avoid creating listener if change already happened
-        if self.load_change().ok_or(RecvError::ChannelClosed)? {
-            return Ok(());
+        loop {
+            // Check for change or closure before waiting
+            match self.load_change() {
+                Some(true) => return Ok(()),
+                None => return Err(RecvError::ChannelClosed),
+                Some(false) => self.shared.changed.listen().await,
+            }
         }
-        event_listener::listener!(self.shared.changed => listener);
-        // Second check: avoid waiting if change happened after first check
-        if self.load_change().ok_or(RecvError::ChannelClosed)? {
-            return Ok(());
-        }
-        listener.await;
-        // Final check after await to handle spurious wakeups
-        self.load_change().ok_or(RecvError::ChannelClosed)?;
-        Ok(())
     }
 
     /// Waits for a condition to become true and returns a guard to the value.

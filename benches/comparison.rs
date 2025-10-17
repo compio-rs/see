@@ -1,4 +1,4 @@
-//! Benchmark comparison between compio-watch and tokio::sync::watch channels.
+//! Benchmark comparison between see and tokio::sync::watch channels.
 //!
 //! This benchmark measures performance characteristics including:
 //! - Single Producer Single Consumer (SPSC) throughput
@@ -9,18 +9,18 @@
 //! The benchmarks test various receiver counts to understand scaling behavior
 //! and compare performance across different workloads.
 
-use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-use std::time::Duration;
 use std::{
     hint::black_box,
     sync::{
         Arc,
         atomic::{AtomicUsize, Ordering},
     },
+    time::Duration,
 };
-use tokio::runtime::Runtime;
 
-use compio_watch::{Sender, channel};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use see::{Sender, channel};
+use tokio::runtime::Runtime;
 
 /// Number of receivers to test in SPSC/MPSC benchmarks.
 /// Tests single receiver (SPSC) and multiple receivers (MPSC) scenarios.
@@ -33,8 +33,8 @@ const PAYLOAD_SIZE: usize = 1024; // 1KB
 /// Number of operations to perform in each benchmark iteration.
 /// This provides consistent measurement across different receiver counts.
 const OPERATIONS_PER_BENCH: u64 = 1000;
-/// Benchmarks SPSC (Single Producer Single Consumer) and MPSC (Multiple Producer Single Consumer)
-/// throughput for both tokio-watch and compio-watch channels.
+/// Benchmarks SPSC (Single Producer Single Consumer) and MPSC (Multiple
+/// Producer Single Consumer) throughput for both tokio-watch and see channels.
 ///
 /// This benchmark measures how well each implementation scales with increasing
 /// numbers of receivers, simulating real-world scenarios where multiple
@@ -48,8 +48,8 @@ fn benchmark_spsc_mpsc(c: &mut Criterion) {
     for &n_receivers in RECEIVER_COUNTS {
         // Benchmark tokio's native watch channel implementation
         // This serves as the baseline for comparison
-        // Benchmark compio-watch implementation
-        // Note: compio-watch uses a different API pattern where receivers
+        // Benchmark see implementation
+        // Note: see uses a different API pattern where receivers
         // are created from the sender via `subscribe()` method
         group.bench_with_input(
             BenchmarkId::new("tokio_watch", n_receivers),
@@ -101,7 +101,7 @@ fn benchmark_spsc_mpsc(c: &mut Criterion) {
         );
 
         group.bench_with_input(
-            BenchmarkId::new("compio_watch", n_receivers),
+            BenchmarkId::new("see", n_receivers),
             &n_receivers,
             |b, &n| {
                 let rt = Runtime::new().unwrap();
@@ -153,7 +153,8 @@ fn benchmark_spsc_mpsc(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmarks the overhead of send operations when there are no active receivers.
+/// Benchmarks the overhead of send operations when there are no active
+/// receivers.
 ///
 /// This measures the raw performance of the send operation without
 /// the cost of notifying receivers, showing the minimal overhead
@@ -169,7 +170,7 @@ fn benchmark_send_only(c: &mut Criterion) {
             }
         });
     });
-    group.bench_function("compio_watch", |b| {
+    group.bench_function("see", |b| {
         let tx = Sender::new([0u8; PAYLOAD_SIZE]);
         b.iter(|| {
             for i in 0..OPERATIONS_PER_BENCH {
@@ -195,7 +196,7 @@ fn benchmark_recv_only(c: &mut Criterion) {
         });
     });
     let (_tx, rx_my) = channel([0u8; PAYLOAD_SIZE]);
-    group.bench_function("compio_watch", |b| {
+    group.bench_function("see", |b| {
         b.iter(|| {
             let _guard = rx_my.borrow();
             black_box(_guard);

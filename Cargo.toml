@@ -13,6 +13,10 @@ categories = ["asynchronous", "concurrency"]
 harness = false
 name = "comparison"
 
+[[bench]]
+harness = false
+name = "single_thread"
+
 [dependencies]
 criterion = { version = "0.7.0", features = ["async_tokio", "html_reports"] }
 event-listener = "5.4.1"

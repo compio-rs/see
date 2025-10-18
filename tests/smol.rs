@@ -5,7 +5,7 @@
 //! and channel lifecycle management.
 use std::time::Duration;
 
-use see::{channel, error::RecvError};
+use see::{error::RecvError, sync::channel};
 
 #[test]
 fn basic_send_recv() {
@@ -31,7 +31,7 @@ fn sender_dropped() {
         let (tx, rx) = channel("live");
         drop(tx);
         let result = rx.changed().await;
-        assert!(matches!(result, Err(RecvError::Failed)));
+        assert!(matches!(result, Err(RecvError::ChannelClosed)));
     });
 }
 

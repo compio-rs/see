@@ -19,7 +19,7 @@ use std::{
 };
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-use see::{Sender, channel};
+use see::sync::{Sender, channel};
 use tokio::runtime::Runtime;
 
 /// Number of receivers to test in SPSC/MPSC benchmarks.

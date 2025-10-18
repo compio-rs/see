@@ -6,7 +6,7 @@
 
 use std::time::Duration;
 
-use see::{channel, error::RecvError};
+use see::{error::RecvError, sync::channel};
 
 /// Tests basic send and receive functionality with compio runtime.
 ///
@@ -35,13 +35,14 @@ async fn basic_send_recv() {
 ///
 /// This test verifies that:
 /// - When all senders are dropped, receivers get appropriate errors
-/// - The `changed()` method returns `RecvError::Failed` when channel is closed
+/// - The `changed()` method returns `RecvError::ChannelClosed` when channel is
+///   closed
 #[compio::test]
 async fn sender_dropped() {
     let (tx, rx) = channel("live");
     drop(tx);
     let result = rx.changed().await;
-    assert!(matches!(result, Err(RecvError::Failed)));
+    assert!(matches!(result, Err(RecvError::ChannelClosed)));
 }
 
 /// Tests behavior when all receivers are dropped.

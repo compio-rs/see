@@ -1,0 +1,25 @@
+name: Check
+
+on:
+  push:
+  pull_request:
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Rust Toolchain
+        run: |
+          rustup default nightly
+          rustup component add clippy
+      - name: Check clippy
+        run: |
+          cargo clippy --all-features --all-targets -- -Dwarnings
+      - name: Check Docs
+        run: |
+          cargo doc --workspace --all-features --no-deps

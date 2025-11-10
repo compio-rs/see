@@ -492,6 +492,32 @@ impl<T> Receiver<T> {
 
 #[cfg(feature = "stream")]
 impl<T: Clone + 'static> Receiver<T> {
+    /// Converts this receiver into a stream of values.
+    ///
+    /// The returned [`UnsyncWatchStream`] yields the current value immediately,
+    /// and then yields new values each time the watched value changes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use futures_util::StreamExt;
+    /// use see::{stream::unsync::UnsyncWatchStream, unsync::channel};
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// let (tx, rx) = channel(1);
+    /// let mut stream = rx.into_stream();
+    ///
+    /// // The stream yields the initial value first
+    /// assert_eq!(stream.next().await, Some(1));
+    /// tx.send(2).unwrap();
+    ///
+    /// // Then yields the updated value
+    /// assert_eq!(stream.next().await, Some(2));
+    /// # }
+    /// ```
+    ///
+    /// The stream ends when the channel is closed.
     pub fn into_stream(self) -> UnsyncWatchStream<T> {
         UnsyncWatchStream::new(self)
     }

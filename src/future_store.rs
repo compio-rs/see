@@ -130,8 +130,6 @@ pub mod unsync {
         }
     }
 
-    unsafe impl<T> Sync for LocalBoxedFutureStore<'_, T> {}
-
     impl<T> fmt::Debug for LocalBoxedFutureStore<'_, T> {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             f.debug_struct("LocalBoxedFutureStore").finish()

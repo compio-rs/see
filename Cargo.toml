@@ -19,7 +19,9 @@ name = "single_thread"
 
 [dependencies]
 event-listener = "5.4.1"
-futures-util = { version = "0.3.31", default-features = false }
+futures-util = { version = "0.3.31", default-features = false, features = [
+    "alloc",
+] }
 local-event = "0.1.1"
 parking_lot = "0.12.5"
 scopeguard = "1.2.0"

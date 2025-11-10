@@ -4,7 +4,7 @@ use compio::time::sleep;
 #[cfg(feature = "stream")]
 use futures_util::StreamExt;
 #[cfg(feature = "stream")]
-use see::stream::UnsyncWatchStream;
+use see::stream::unsync::UnsyncWatchStream;
 use see::{
     error::{RecvError, SendError},
     unsync::*,

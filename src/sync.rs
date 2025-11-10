@@ -20,6 +20,8 @@ use std::{
 use event_listener::Event;
 use parking_lot::{RwLock, RwLockReadGuard};
 
+#[cfg(feature = "stream")]
+use crate::stream::sync::SyncWatchStream;
 use crate::{
     error::{RecvError, SendError},
     state::{StateSnapshot, Version},
@@ -503,6 +505,13 @@ impl<T> Receiver<T> {
             // Wait for next change before checking condition again
             self.changed().await?;
         }
+    }
+}
+
+#[cfg(feature = "stream")]
+impl<T: Clone + 'static + Send + Sync> Receiver<T> {
+    pub fn into_stream(self) -> SyncWatchStream<T> {
+        SyncWatchStream::new(self)
     }
 }
 

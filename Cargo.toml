@@ -18,13 +18,20 @@ harness = false
 name = "single_thread"
 
 [dependencies]
-criterion = { version = "0.7.0", features = ["async_tokio", "html_reports"] }
 event-listener = "5.4.1"
+futures-util = { version = "0.3.31", default-features = false }
 local-event = "0.1.1"
 parking_lot = "0.12.5"
+scopeguard = "1.2.0"
 thiserror = "2.0.17"
+
 
 [dev-dependencies]
 smol = "2.0.2"
+criterion = { version = "0.7.0", features = ["async_tokio", "html_reports"] }
 compio = { version = "0.16.0", features = ["macros", "time"] }
 tokio = { version = "1.48.0", features = ["full"] }
+
+[features]
+stream = []
+# default = ["stream"]

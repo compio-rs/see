@@ -34,8 +34,12 @@
 //! # }
 //! ```
 
+#[cfg(feature = "stream")]
+mod future_store;
 mod state;
 
+#[cfg(feature = "stream")]
+pub mod stream;
 pub mod sync;
 pub mod unsync;
 

@@ -15,6 +15,8 @@ use std::{
 
 use local_event::Event;
 
+#[cfg(feature = "stream")]
+use crate::stream::unsync::UnsyncWatchStream;
 use crate::{
     error::{RecvError, SendError},
     state::{StateSnapshot, Version},
@@ -177,8 +179,8 @@ impl<T> Sender<T> {
     /// Sends a new value to all receivers.
     ///
     /// # Errors
-    /// Returns `SendError::ChannelClosed` if the channel is closed (all receivers
-    /// dropped).
+    /// Returns `SendError::ChannelClosed` if the channel is closed (all
+    /// receivers dropped).
     pub fn send(&self, value: T) -> Result<(), SendError<T>> {
         if self.is_closed() {
             return Err(SendError::ChannelClosed(value));
@@ -485,6 +487,13 @@ impl<T> Receiver<T> {
             // Wait for next change before checking condition again
             self.changed().await?;
         }
+    }
+}
+
+#[cfg(feature = "stream")]
+impl<T: Clone + 'static> Receiver<T> {
+    pub fn into_stream(self) -> UnsyncWatchStream<T> {
+        UnsyncWatchStream::new(self)
     }
 }
 

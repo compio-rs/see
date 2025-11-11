@@ -16,7 +16,7 @@ use std::{
 use local_event::Event;
 
 #[cfg(feature = "stream")]
-use crate::stream::unsync::UnsyncWatchStream;
+use crate::stream::unsync::UnsyncStream;
 use crate::{
     error::{RecvError, SendError},
     state::{StateSnapshot, Version},
@@ -494,14 +494,14 @@ impl<T> Receiver<T> {
 impl<T: Clone + 'static> Receiver<T> {
     /// Converts this receiver into a stream of values.
     ///
-    /// The returned [`UnsyncWatchStream`] yields the current value immediately,
+    /// The returned [`UnsyncStream`] yields the current value immediately,
     /// and then yields new values each time the watched value changes.
     ///
     /// # Examples
     ///
     /// ```
     /// use futures_util::StreamExt;
-    /// use see::{stream::unsync::UnsyncWatchStream, unsync::channel};
+    /// use see::{stream::unsync::UnsyncStream, unsync::channel};
     ///
     /// # #[tokio::main]
     /// # async fn main() {
@@ -518,8 +518,8 @@ impl<T: Clone + 'static> Receiver<T> {
     /// ```
     ///
     /// The stream ends when the channel is closed.
-    pub fn into_stream(self) -> UnsyncWatchStream<T> {
-        UnsyncWatchStream::new(self)
+    pub fn into_stream(self) -> UnsyncStream<T> {
+        UnsyncStream::new(self)
     }
 }
 

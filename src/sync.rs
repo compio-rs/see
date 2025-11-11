@@ -21,7 +21,7 @@ use event_listener::Event;
 use parking_lot::{RwLock, RwLockReadGuard};
 
 #[cfg(feature = "stream")]
-use crate::stream::sync::SyncWatchStream;
+use crate::stream::sync::SyncStream;
 use crate::{
     error::{RecvError, SendError},
     state::{StateSnapshot, Version},
@@ -512,7 +512,7 @@ impl<T> Receiver<T> {
 impl<T: Clone + 'static + Send + Sync> Receiver<T> {
     /// Converts this receiver into a stream of values.
     ///
-    /// The returned [`SyncWatchStream`] yields the current value immediately,
+    /// The returned [`SyncStream`] yields the current value immediately,
     /// and then yields each subsequent value whenever it changes.
     ///
     /// # Examples
@@ -535,8 +535,8 @@ impl<T: Clone + 'static + Send + Sync> Receiver<T> {
     /// ```
     ///
     /// The stream ends when the channel is closed.
-    pub fn into_stream(self) -> SyncWatchStream<T> {
-        SyncWatchStream::new(self)
+    pub fn into_stream(self) -> SyncStream<T> {
+        SyncStream::new(self)
     }
 }
 

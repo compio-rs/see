@@ -4,7 +4,7 @@ use compio::time::sleep;
 #[cfg(feature = "stream")]
 use futures_util::StreamExt;
 #[cfg(feature = "stream")]
-use see::stream::unsync::UnsyncWatchStream;
+use see::stream::unsync::UnsyncStream;
 use see::{
     error::{RecvError, SendError},
     unsync::*,
@@ -261,7 +261,7 @@ fn test_default() {
 #[cfg(feature = "stream")]
 async fn test_unsync_stream_basic() {
     let (tx, rx) = channel(10);
-    let mut stream = UnsyncWatchStream::new(rx);
+    let mut stream = UnsyncStream::new(rx);
 
     // First value from stream should be initial value
     let value = stream.next().await;
@@ -291,7 +291,7 @@ async fn test_unsync_stream_basic() {
 #[cfg(feature = "stream")]
 async fn test_unsync_stream_from_changes() {
     let (tx, rx) = channel("initial");
-    let mut stream = UnsyncWatchStream::from_changes(rx);
+    let mut stream = UnsyncStream::from_changes(rx);
 
     // Send a new value immediately
     tx.send("updated").unwrap();

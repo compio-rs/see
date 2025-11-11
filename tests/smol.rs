@@ -57,10 +57,10 @@ fn all_receivers_dropped() {
 #[cfg(feature = "stream")]
 fn sync_stream_basic() {
     smol::block_on(async {
-        use see::stream::sync::SyncWatchStream;
+        use see::stream::sync::SyncStream;
 
         let (tx, rx) = channel(10);
-        let mut stream = SyncWatchStream::new(rx);
+        let mut stream = SyncStream::new(rx);
 
         // First value from stream should be initial value
         let value = stream.next().await;
@@ -86,10 +86,10 @@ fn sync_stream_basic() {
 #[cfg(feature = "stream")]
 fn sync_stream_from_changes() {
     smol::block_on(async {
-        use see::stream::sync::SyncWatchStream;
+        use see::stream::sync::SyncStream;
 
         let (tx, rx) = channel("initial");
-        let mut stream = SyncWatchStream::from_changes(rx);
+        let mut stream = SyncStream::from_changes(rx);
 
         // Send a new value immediately
         tx.send("updated").unwrap();

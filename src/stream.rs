@@ -5,8 +5,8 @@
 //! available in the watch channel.
 //!
 //! Two stream types are provided:
-//! - [`sync::SyncWatchStream`] for synchronized watch channels
-//! - [`unsync::UnsyncWatchStream`] for unsynchronized watch channels
+//! - [`sync::SyncStream`] for synchronized watch channels
+//! - [`unsync::UnsyncStream`] for unsynchronized watch channels
 
 use std::{
     fmt,
@@ -38,12 +38,12 @@ pub mod sync {
     ///
     /// When the sender is dropped, the stream will yield `None` to indicate
     /// the stream has ended.
-    pub struct SyncWatchStream<T> {
+    pub struct SyncStream<T> {
         /// The future store containing the pending operation.
         inner: BoxedFutureStore<'static, (Result<(), RecvError>, Receiver<T>)>,
     }
 
-    impl<T: 'static + Clone + Send + Sync> SyncWatchStream<T> {
+    impl<T: 'static + Clone + Send + Sync> SyncStream<T> {
         /// Create a new stream from a receiver that yields the current value
         /// first.
         ///
@@ -54,11 +54,11 @@ pub mod sync {
         ///
         /// ```
         /// use futures_util::StreamExt;
-        /// use see::{stream::sync::SyncWatchStream, sync::channel};
+        /// use see::{stream::sync::SyncStream, sync::channel};
         ///
         /// # async fn doc() {
         /// let (tx, rx) = channel("hello");
-        /// let mut stream = SyncWatchStream::new(rx);
+        /// let mut stream = SyncStream::new(rx);
         ///
         /// // First poll yields current value
         /// let value = stream.next().await;
@@ -80,11 +80,11 @@ pub mod sync {
         ///
         /// ```
         /// use futures_util::StreamExt;
-        /// use see::{stream::sync::SyncWatchStream, sync::channel};
+        /// use see::{stream::sync::SyncStream, sync::channel};
         ///
         /// # async fn doc() {
         /// let (tx, rx) = channel("hello");
-        /// let mut stream = SyncWatchStream::from_changes(rx);
+        /// let mut stream = SyncStream::from_changes(rx);
         ///
         /// // Update the value
         /// tx.send("world").unwrap();
@@ -101,7 +101,7 @@ pub mod sync {
         }
     }
 
-    impl<T: Clone + 'static + Send + Sync> Stream for SyncWatchStream<T> {
+    impl<T: Clone + 'static + Send + Sync> Stream for SyncStream<T> {
         type Item = T;
 
         fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
@@ -120,15 +120,15 @@ pub mod sync {
         }
     }
 
-    impl<T> Unpin for SyncWatchStream<T> {}
+    impl<T> Unpin for SyncStream<T> {}
 
-    impl<T> fmt::Debug for SyncWatchStream<T> {
+    impl<T> fmt::Debug for SyncStream<T> {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.debug_struct("SyncWatchStream").finish()
+            f.debug_struct("SyncStream").finish()
         }
     }
 
-    impl<T: 'static + Clone + Send + Sync> From<Receiver<T>> for SyncWatchStream<T> {
+    impl<T: 'static + Clone + Send + Sync> From<Receiver<T>> for SyncStream<T> {
         fn from(recv: Receiver<T>) -> Self {
             Self::new(recv)
         }
@@ -153,12 +153,12 @@ pub mod unsync {
     ///
     /// When the sender is dropped, the stream will yield `None` to indicate
     /// the stream has ended.
-    pub struct UnsyncWatchStream<T> {
+    pub struct UnsyncStream<T> {
         /// The future store containing the pending operation.
         inner: LocalBoxedFutureStore<'static, (Result<(), RecvError>, Receiver<T>)>,
     }
 
-    impl<T: 'static + Clone> UnsyncWatchStream<T> {
+    impl<T: 'static + Clone> UnsyncStream<T> {
         /// Create a new stream from a receiver that yields the current value
         /// first.
         ///
@@ -169,11 +169,11 @@ pub mod unsync {
         ///
         /// ```
         /// use futures_util::StreamExt;
-        /// use see::{stream::unsync::UnsyncWatchStream, unsync::channel};
+        /// use see::{stream::unsync::UnsyncStream, unsync::channel};
         ///
         /// # async fn doc() {
         /// let (tx, rx) = channel("hello");
-        /// let mut stream = UnsyncWatchStream::new(rx);
+        /// let mut stream = UnsyncStream::new(rx);
         ///
         /// // First poll yields current value
         /// let value = stream.next().await;
@@ -195,11 +195,11 @@ pub mod unsync {
         ///
         /// ```
         /// use futures_util::StreamExt;
-        /// use see::{stream::unsync::UnsyncWatchStream, unsync::channel};
+        /// use see::{stream::unsync::UnsyncStream, unsync::channel};
         ///
         /// # async fn doc() {
         /// let (tx, rx) = channel("hello");
-        /// let mut stream = UnsyncWatchStream::from_changes(rx);
+        /// let mut stream = UnsyncStream::from_changes(rx);
         ///
         /// // Update the value
         /// tx.send("world").unwrap();
@@ -216,7 +216,7 @@ pub mod unsync {
         }
     }
 
-    impl<T: Clone + 'static> Stream for UnsyncWatchStream<T> {
+    impl<T: Clone + 'static> Stream for UnsyncStream<T> {
         type Item = T;
 
         fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
@@ -235,15 +235,15 @@ pub mod unsync {
         }
     }
 
-    impl<T> Unpin for UnsyncWatchStream<T> {}
+    impl<T> Unpin for UnsyncStream<T> {}
 
-    impl<T> fmt::Debug for UnsyncWatchStream<T> {
+    impl<T> fmt::Debug for UnsyncStream<T> {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.debug_struct("UnsyncWatchStream").finish()
+            f.debug_struct("UnsyncStream").finish()
         }
     }
 
-    impl<T: 'static + Clone> From<Receiver<T>> for UnsyncWatchStream<T> {
+    impl<T: 'static + Clone> From<Receiver<T>> for UnsyncStream<T> {
         fn from(recv: Receiver<T>) -> Self {
             Self::new(recv)
         }

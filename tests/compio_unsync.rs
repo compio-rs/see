@@ -1,6 +1,10 @@
 use std::time::Duration;
 
 use compio::time::sleep;
+#[cfg(feature = "stream")]
+use futures_util::StreamExt;
+#[cfg(feature = "stream")]
+use see::stream::unsync::UnsyncStream;
 use see::{
     error::{RecvError, SendError},
     unsync::*,
@@ -245,4 +249,61 @@ fn test_default() {
     let tx = Sender::<String>::default();
     let guard = tx.borrow();
     assert_eq!(*guard, "");
+}
+
+/// Tests stream functionality for unsync version.
+///
+/// This test verifies that:
+/// - Stream correctly yields initial value
+/// - Stream correctly yields updated values
+/// - Stream properly terminates when sender is dropped
+#[compio::test]
+#[cfg(feature = "stream")]
+async fn test_unsync_stream_basic() {
+    let (tx, rx) = channel(10);
+    let mut stream = UnsyncStream::new(rx);
+
+    // First value from stream should be initial value
+    let value = stream.next().await;
+    assert_eq!(value, Some(10));
+
+    // Send a new value
+    tx.send(20).unwrap();
+
+    // Stream should yield the new value
+    let value = stream.next().await;
+    assert_eq!(value, Some(20));
+
+    // Drop sender
+    drop(tx);
+
+    // Next call should yield None to indicate stream end
+    let value = stream.next().await;
+    assert_eq!(value, None);
+}
+
+/// Tests stream from_changes functionality for unsync version.
+///
+/// This test verifies that:
+/// - Stream correctly waits for changes before yielding values
+/// - Stream properly terminates when sender is dropped
+#[compio::test]
+#[cfg(feature = "stream")]
+async fn test_unsync_stream_from_changes() {
+    let (tx, rx) = channel("initial");
+    let mut stream = UnsyncStream::from_changes(rx);
+
+    // Send a new value immediately
+    tx.send("updated").unwrap();
+
+    // Stream should yield the updated value
+    let value = stream.next().await;
+    assert_eq!(value, Some("updated"));
+
+    // Drop sender
+    drop(tx);
+
+    // Next call should yield None to indicate stream end
+    let value = stream.next().await;
+    assert_eq!(value, None);
 }

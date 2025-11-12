@@ -5,6 +5,8 @@
 //! and channel lifecycle management.
 use std::time::Duration;
 
+#[cfg(feature = "stream")]
+use futures_util::StreamExt;
 use see::{error::RecvError, sync::channel};
 
 #[test]
@@ -48,5 +50,59 @@ fn all_receivers_dropped() {
         closed_handle.await;
         assert!(tx.is_closed());
         assert!(tx.send(200).is_err());
+    });
+}
+
+#[test]
+#[cfg(feature = "stream")]
+fn sync_stream_basic() {
+    smol::block_on(async {
+        use see::stream::sync::SyncStream;
+
+        let (tx, rx) = channel(10);
+        let mut stream = SyncStream::new(rx);
+
+        // First value from stream should be initial value
+        let value = stream.next().await;
+        assert_eq!(value, Some(10));
+
+        // Send a new value
+        tx.send(20).unwrap();
+
+        // Stream should yield the new value
+        let value = stream.next().await;
+        assert_eq!(value, Some(20));
+
+        // Drop sender
+        drop(tx);
+
+        // Next call should yield None to indicate stream end
+        let value = stream.next().await;
+        assert_eq!(value, None);
+    });
+}
+
+#[test]
+#[cfg(feature = "stream")]
+fn sync_stream_from_changes() {
+    smol::block_on(async {
+        use see::stream::sync::SyncStream;
+
+        let (tx, rx) = channel("initial");
+        let mut stream = SyncStream::from_changes(rx);
+
+        // Send a new value immediately
+        tx.send("updated").unwrap();
+
+        // Stream should yield the updated value
+        let value = stream.next().await;
+        assert_eq!(value, Some("updated"));
+
+        // Drop sender
+        drop(tx);
+
+        // Next call should yield None to indicate stream end
+        let value = stream.next().await;
+        assert_eq!(value, None);
     });
 }

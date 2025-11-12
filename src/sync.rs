@@ -20,6 +20,8 @@ use std::{
 use event_listener::Event;
 use parking_lot::{RwLock, RwLockReadGuard};
 
+#[cfg(feature = "stream")]
+use crate::stream::sync::SyncStream;
 use crate::{
     error::{RecvError, SendError},
     state::{StateSnapshot, Version},
@@ -503,6 +505,38 @@ impl<T> Receiver<T> {
             // Wait for next change before checking condition again
             self.changed().await?;
         }
+    }
+}
+
+#[cfg(feature = "stream")]
+impl<T: Clone + 'static + Send + Sync> Receiver<T> {
+    /// Converts this receiver into a stream of values.
+    ///
+    /// The returned [`SyncStream`] yields the current value immediately,
+    /// and then yields each subsequent value whenever it changes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use futures_util::StreamExt;
+    /// use see::sync::channel;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// let (tx, rx) = channel(1);
+    /// let mut stream = rx.into_stream();
+    ///
+    /// // The stream yields the initial value first
+    /// assert_eq!(stream.next().await, Some(1));
+    ///
+    /// tx.send(2).unwrap();
+    /// assert_eq!(stream.next().await, Some(2));
+    /// # }
+    /// ```
+    ///
+    /// The stream ends when the channel is closed.
+    pub fn into_stream(self) -> SyncStream<T> {
+        SyncStream::new(self)
     }
 }
 

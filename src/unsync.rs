@@ -15,6 +15,8 @@ use std::{
 
 use local_event::Event;
 
+#[cfg(feature = "stream")]
+use crate::stream::unsync::UnsyncStream;
 use crate::{
     error::{RecvError, SendError},
     state::{StateSnapshot, Version},
@@ -177,8 +179,8 @@ impl<T> Sender<T> {
     /// Sends a new value to all receivers.
     ///
     /// # Errors
-    /// Returns `SendError::ChannelClosed` if the channel is closed (all receivers
-    /// dropped).
+    /// Returns `SendError::ChannelClosed` if the channel is closed (all
+    /// receivers dropped).
     pub fn send(&self, value: T) -> Result<(), SendError<T>> {
         if self.is_closed() {
             return Err(SendError::ChannelClosed(value));
@@ -485,6 +487,39 @@ impl<T> Receiver<T> {
             // Wait for next change before checking condition again
             self.changed().await?;
         }
+    }
+}
+
+#[cfg(feature = "stream")]
+impl<T: Clone + 'static> Receiver<T> {
+    /// Converts this receiver into a stream of values.
+    ///
+    /// The returned [`UnsyncStream`] yields the current value immediately,
+    /// and then yields new values each time the watched value changes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use futures_util::StreamExt;
+    /// use see::{stream::unsync::UnsyncStream, unsync::channel};
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// let (tx, rx) = channel(1);
+    /// let mut stream = rx.into_stream();
+    ///
+    /// // The stream yields the initial value first
+    /// assert_eq!(stream.next().await, Some(1));
+    /// tx.send(2).unwrap();
+    ///
+    /// // Then yields the updated value
+    /// assert_eq!(stream.next().await, Some(2));
+    /// # }
+    /// ```
+    ///
+    /// The stream ends when the channel is closed.
+    pub fn into_stream(self) -> UnsyncStream<T> {
+        UnsyncStream::new(self)
     }
 }
 
